@@ -181,43 +181,28 @@ window.addEventListener('DOMContentLoaded', () => {
         }
     }
 
-    new MenuCard(
-        "img/tabs/vegy.jpg",
-        "vegy",
-        'Меню "Фитнес"',
-        `Меню "Фитнес" - это новый подход к приготовлению блюд: больше свежих
-        овощей и фруктов. Продукт активных и здоровых людей. Это абсолютно новый продукт с оптимальной
-        ценой и высоким качеством!`,
-        10,
-        '.menu .container',
-        'menu__item'
-    ).render();
+    getResource('http://localhost:3000/menu')
+        .then(data => createCard(data));
 
-    new MenuCard(
-        "img/tabs/elite.jpg",
-        "elite",
-        'Меню “Премиум”',
-        `В меню “Премиум” мы используем не только красивый дизайн упаковки, но
-        и качественное исполнение блюд. Красная рыба, морепродукты, фрукты - ресторанное меню без похода
-        в ресторан!`,
-        15,
-        '.menu .container',
-        'menu__item'
-    ).render();
+    function createCard(data) {
+        data.forEach(({ img, altimg, title, descr, price }) => {
+            const element = document.createElement('div');
 
-    new MenuCard(
-        "img/tabs/post.jpg",
-        "post",
-        'Меню "Постное"',
-        `Меню “Постное” - это тщательный подбор ингредиентов: полное отсутствие
-        продуктов животного происхождения, молоко из миндаля, овса, кокоса или гречки, правильное
-        количество белков за счет тофу и импортных вегетарианских стейков.`,
-        5,
-        '.menu .container',
-        'menu__item'
-    ).render();
+            element.classList.add("menu__item");
 
-    // Forms
+            element.innerHTML = `
+                <img src=${img} alt=${altimg}>
+                <h3 class="menu__item-subtitle">${title}</h3>
+                <div class="menu__item-descr">${descr}</div>
+                <div class="menu__item-divider"></div>
+                <div class="menu__item-price">
+                    <div class="menu__item-cost">Цена:</div>
+                    <div class="menu__item-total"><span>${price}</span> грн/день</div>
+                </div>
+            `;
+            document.querySelector(".menu .container").append(element);
+        });
+    }
 
     const forms = document.querySelectorAll('form');
     const message = {
@@ -227,15 +212,37 @@ window.addEventListener('DOMContentLoaded', () => {
     };
 
     forms.forEach(item => {
-        postData(item);
+        bindPostData(item);
     });
 
-    function postData(form) {
+    const postData = async (url, data) => {
+        let res = await fetch(url, {
+            method: "POST",
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: data
+        });
+
+        return await res.json();
+    };
+
+    async function getResource(url) {
+        let res = await fetch(url);
+
+        if (!res.ok) {
+            throw new Error(`Could not fetch ${url}, status: ${res.status}`);
+        }
+
+        return await res.json();
+    }
+
+    function bindPostData(form) {
         form.addEventListener('submit', (e) => {
 
             e.preventDefault();
 
-            const statusMessage = document.createElement('img');
+            let statusMessage = document.createElement('img');
             statusMessage.src = message.loading;
             statusMessage.style.cssText = `
                 display: block;
@@ -245,18 +252,9 @@ window.addEventListener('DOMContentLoaded', () => {
 
             const formData = new FormData(form);
 
-            const object = {};
-            formData.forEach(function (value, key) {
-                object[key] = value;
-            });
+            const json = JSON.stringify(Object.fromEntries(formData.entries()));
 
-            fetch('server.php', {
-                method: "POST",
-                headers: {
-                    'Content-type': 'application/json'
-                },
-                body: JSON.stringify(object)
-            }).then(data => data.text())
+            postData('http://localhost:3000/requests', json)
                 .then(data => {
                     console.log(data);
                     showThanksModal(message.success);
@@ -265,7 +263,7 @@ window.addEventListener('DOMContentLoaded', () => {
                     showThanksModal(message.failure);
                 }).finally(() => {
                     form.reset();
-                })
+                });
         });
     }
 
@@ -289,6 +287,7 @@ window.addEventListener('DOMContentLoaded', () => {
             thanksModal.remove();
             prevModalDialog.classList.add('show');
             prevModalDialog.classList.remove('hide');
+            closeModal();
         }, 4000);
     }
 });  
