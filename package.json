@@ -18,5 +18,8 @@
   "description": "",
   "dependencies": {
     "json-server": "^1.0.0-beta.3"
+  },
+  "devDependencies": {
+    "webpack-cli": "^6.0.1"
   }
 }
