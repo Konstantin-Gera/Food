@@ -1,3 +1,5 @@
+import { closeModal, openModal } from "./modal";
+
 function cards() {
     //Use class
     class MenuCard {
@@ -120,11 +122,11 @@ function cards() {
         });
     }
 
-    function showThanksModal(message) {
+    function showThanksModal(message, modalTimerId) {
         const prevModalDialog = document.querySelector('.modal__dialog');
 
         prevModalDialog.classList.add('hide');
-        openModal();
+        openModal('.modal', modalTimerId);
 
         const thanksModal = document.createElement('div');
         thanksModal.classList.add('modal__dialog');
@@ -140,10 +142,10 @@ function cards() {
             thanksModal.remove();
             prevModalDialog.classList.add('show');
             prevModalDialog.classList.remove('hide');
-            closeModal();
+            closeModal('.modal');
         }, 4000);
     }
 
 }
 
-module.exports = cards;
+export default cards;
